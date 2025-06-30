@@ -1,3 +1,3 @@
-# TASKrs
+# CALENDARrs
 
-Project managment and task tracking tool in yout terminal.
+Calendar in your terminal
