@@ -7,11 +7,19 @@ use ratatui::{
     widgets::{Block, Widget},
 };
 
+use crate::views::{common::utils::month_info, monthly::cursor::Cursor};
+
+mod cursor;
 mod render;
 
 pub struct MonthlyView {
     curr_year: i32,
     curr_month: u32,
+
+    first_day: i32,
+    month_len: i32,
+
+    c: Cursor,
 }
 
 impl MonthlyView {
@@ -20,10 +28,14 @@ impl MonthlyView {
         Self {
             curr_month: now.month(),
             curr_year: now.year(),
+            c: Cursor::new().with_w(7).with_h(6),
+            first_day: 0,
+            month_len: 0,
         }
     }
 
     pub fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {
+        // TODO: move keys to cfg
         match key_ev.code {
             KeyCode::Char('n') => {
                 self.curr_month += 1;
@@ -40,9 +52,40 @@ impl MonthlyView {
                     self.curr_month -= 1;
                 }
             }
+            KeyCode::Char('s') => {
+                self.c.change_shown();
+            }
+
+            KeyCode::Char('h')
+            | KeyCode::Char('j')
+            | KeyCode::Char('k')
+            | KeyCode::Char('l')
+            | KeyCode::Down
+            | KeyCode::Left
+            | KeyCode::Up
+            | KeyCode::Right => self.handle_movement_keys(key_ev.code),
 
             _ => {}
         }
+    }
+
+    fn handle_movement_keys(&mut self, code: KeyCode) {
+        match code {
+            KeyCode::Char('h') | KeyCode::Left => self.c.move_left(),
+            KeyCode::Char('j') | KeyCode::Down => self.c.move_bottom(),
+            KeyCode::Char('k') | KeyCode::Up => self.c.move_top(),
+            KeyCode::Char('l') | KeyCode::Right => self.c.move_right(),
+
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn update(&mut self) {
+        let (first_day_idx, days_in_month) = month_info(self.curr_year, self.curr_month);
+        self.first_day = first_day_idx;
+        self.month_len = days_in_month;
+
+        self.c.set_max_day(self.month_len);
     }
 }
 
@@ -71,9 +114,14 @@ impl Widget for &MonthlyView {
         );
 
         let block = Block::new().title(title.alignment(Alignment::Left));
-        let inner_area = block.inner(area);
+        let mut inner_area = block.inner(area);
+
+        // little offset
+        inner_area.y += 1;
+        inner_area.height -= 1;
+
         block.render(area, buf);
 
-        self.render_main_grid(inner_area, buf, self.curr_year, self.curr_month);
+        self.render_main_grid(inner_area, buf);
     }
 }

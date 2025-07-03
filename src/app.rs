@@ -55,7 +55,13 @@ impl App {
     }
 
     fn update<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {
+        match self.curr_view {
+            AppView::Daily => { /* TODO */ }
+            AppView::Monthly => self.monthly.update(),
+        }
+
         term.draw(|frame| self.draw(frame))?;
+
         self.handle_events()?;
 
         Ok(())

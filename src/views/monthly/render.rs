@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
-use crate::views::{common::utils::month_info, monthly::MonthlyView};
+use crate::views::monthly::MonthlyView;
 
 impl MonthlyView {
     fn render_days_titles(&self, inner_area: Rect, buf: &mut ratatui::prelude::Buffer) {
@@ -58,8 +58,6 @@ impl MonthlyView {
         &self,
         mut inner_area: Rect,
         buf: &mut ratatui::prelude::Buffer,
-        year: i32,
-        month: u32,
     ) {
         self.render_days_titles(inner_area, buf);
 
@@ -82,13 +80,11 @@ impl MonthlyView {
             .flat_map(|&row| horizontal.split(row).to_vec())
             .collect();
 
-        let (first_day_idx, days_in_month) = month_info(year, month);
-
         for (i, cell) in cells.iter().enumerate() {
-            let day_num = (i as i32) - first_day_idx;
+            let day_num = (i as i32) - self.first_day;
 
             // hide days not in curr month
-            let text = if day_num >= 0 && day_num < days_in_month {
+            let text = if day_num >= 0 && day_num < self.month_len {
                 format!("{}", day_num + 1)
             } else {
                 "".to_string()
@@ -96,7 +92,10 @@ impl MonthlyView {
 
             // make weekdays red
             let weekday = i % 7;
-            let style = if weekday == 5 || weekday == 6 {
+
+            let style = if self.c.current_day() == Some(i as i32) {
+                Style::new().bg(Color::Blue).fg(Color::White)
+            } else if weekday == 5 || weekday == 6 {
                 Style::new().fg(Color::Red)
             } else {
                 Style::default()
