@@ -2,7 +2,7 @@ use chrono::{Datelike, Local, NaiveDate, Weekday};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     layout::{Alignment, Constraint, Layout, Rect},
-    style::Stylize,
+    style::{Color, Style, Stylize},
     text::{Line, Text},
     widgets::{Block, Paragraph, Widget},
 };
@@ -63,7 +63,14 @@ impl MonthlyView {
                 6 => "SUNDAY",
                 _ => "",
             };
-            Text::from(title).render(cell, buf);
+
+            let style = if i == 5 || i == 6 {
+                Style::new().fg(Color::Red)
+            } else {
+                Style::new().fg(Color::Blue)
+            };
+
+            Text::from(title).style(style).render(cell, buf);
         }
     }
 
@@ -100,13 +107,23 @@ impl MonthlyView {
         for (i, cell) in cells.iter().enumerate() {
             let day_num = (i as i32) - first_day_idx;
 
+            // hide days not in curr month
             let text = if day_num >= 0 && day_num < days_in_month {
                 format!("{}", day_num + 1)
             } else {
                 "".to_string()
             };
 
+            // make weekdays red
+            let weekday = i % 7;
+            let style = if weekday == 5 || weekday == 6 {
+                Style::new().fg(Color::Red)
+            } else {
+                Style::default()
+            };
+
             Paragraph::new(text)
+                .style(style)
                 .block(Block::new())
                 .alignment(Alignment::Left)
                 .render(*cell, buf);
