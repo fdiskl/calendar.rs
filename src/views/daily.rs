@@ -1,4 +1,5 @@
 use ratatui::{
+    crossterm::event::KeyEvent,
     style::Stylize,
     symbols::border,
     text::Line,
@@ -11,6 +12,8 @@ impl DailyView {
     pub fn new() -> Self {
         Self {}
     }
+
+    pub fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {}
 }
 
 impl Widget for &DailyView {

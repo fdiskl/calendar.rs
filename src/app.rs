@@ -76,7 +76,10 @@ impl App {
         match key_ev.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Char('v') => self.change_mode(),
-            _ => {}
+            _ => match self.curr_view {
+                AppView::Daily => self.daily.handle_key_press_ev(key_ev),
+                AppView::Monthly => self.monthly.handle_key_press_ev(key_ev),
+            },
         }
 
         Ok(())
