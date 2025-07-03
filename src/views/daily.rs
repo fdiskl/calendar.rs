@@ -17,9 +17,7 @@ impl Widget for &DailyView {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         let title = Line::from("DAILY VIEW".bold());
 
-        let block = Block::bordered()
-            .title(title.centered())
-            .border_set(border::THICK);
+        let block = Block::new().title(title.centered());
 
         block.render(area, buf);
     }

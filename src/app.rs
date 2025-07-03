@@ -6,7 +6,11 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::views::{daily::DailyView, monthly::MonthlyView};
+use crate::views::{
+    common::{journal::Journal, layout::render_layout},
+    daily::DailyView,
+    monthly::MonthlyView,
+};
 
 enum AppState {
     Running,
@@ -26,6 +30,8 @@ pub struct App {
 
     daily: DailyView,
     monthly: MonthlyView,
+
+    journal: Journal,
 }
 
 impl App {
@@ -35,6 +41,7 @@ impl App {
             curr_view: AppView::default(),
             daily: DailyView::new(),
             monthly: MonthlyView::new(),
+            journal: Journal::new(),
         }
     }
 
@@ -94,8 +101,8 @@ impl App {
 impl Widget for &App {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         match self.curr_view {
-            AppView::Daily => self.daily.render(area, buf),
-            AppView::Monthly => self.monthly.render(area, buf),
+            AppView::Daily => render_layout(area, buf, &self.daily, &self.journal),
+            AppView::Monthly => render_layout(area, buf, &self.monthly, &self.journal),
         }
     }
 }
