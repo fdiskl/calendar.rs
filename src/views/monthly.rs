@@ -52,16 +52,31 @@ impl MonthlyView {
         let rows = vertical.split(inner_area);
         let cells = rows.iter().flat_map(|&row| horizontal.split(row).to_vec());
 
+        let long_titles = inner_area.width as usize / 7 > ("SATURDAY".len() + 1);
+
         for (i, cell) in cells.enumerate() {
-            let title = match i {
-                0 => "MONDAY",
-                1 => "TUESDAY",
-                2 => "WEDNESDAY",
-                3 => "THURSDAY",
-                4 => "FRIDAY",
-                5 => "SATURDAY",
-                6 => "SUNDAY",
-                _ => "",
+            let title = if long_titles {
+                match i {
+                    0 => "MONDAY",
+                    1 => "TUESDAY",
+                    2 => "WEDNESDAY",
+                    3 => "THURSDAY",
+                    4 => "FRIDAY",
+                    5 => "SATURDAY",
+                    6 => "SUNDAY",
+                    _ => "",
+                }
+            } else {
+                match i {
+                    0 => "MON",
+                    1 => "TUE",
+                    2 => "WED",
+                    3 => "THU",
+                    4 => "FRI",
+                    5 => "SAT",
+                    6 => "SUN",
+                    _ => "",
+                }
             };
 
             let style = if i == 5 || i == 6 {
@@ -70,7 +85,7 @@ impl MonthlyView {
                 Style::new().fg(Color::Blue)
             };
 
-            Text::from(title).style(style).render(cell, buf);
+            Text::from(title).style(style).render(cell, buf)
         }
     }
 
