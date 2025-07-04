@@ -6,22 +6,32 @@ use ratatui::{
     widgets::{Block, Widget},
 };
 
+use anyhow::Result;
+
+use crate::views::common::view::View;
+
 pub struct DailyView {}
 
 impl DailyView {
     pub fn new() -> Self {
         Self {}
     }
-
-    pub fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {}
 }
 
-impl Widget for &DailyView {
-    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
+impl View for DailyView {
+    fn render(&self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         let title = Line::from("DAILY VIEW".bold());
 
         let block = Block::new().title(title.centered());
 
         block.render(area, buf);
+    }
+
+    fn handle_event(&mut self, e: ratatui::crossterm::event::Event) -> Result<()> {
+        todo!()
+    }
+
+    fn update(&mut self) {
+        todo!()
     }
 }

@@ -7,8 +7,9 @@ use ratatui::{
 };
 
 use crate::views::{
-    common::{journal::Journal, layout::render_layout},
+    common::{layout::render_layout, view::View, view_switcher::ViewSwitcher},
     daily::DailyView,
+    journal::Journal,
     monthly::MonthlyView,
 };
 
@@ -18,30 +19,28 @@ enum AppState {
 }
 
 #[derive(Default)]
-enum AppView {
-    Daily,
+enum Focused {
+    Journal,
     #[default]
-    Monthly,
+    MainView,
 }
 
-pub struct App {
+pub struct App<'a> {
     state: AppState,
-    curr_view: AppView,
 
-    daily: DailyView,
-    monthly: MonthlyView,
+    focused: Focused,
+    main_view: ViewSwitcher<'a>,
 
     journal: Journal,
 }
 
-impl App {
-    pub fn new() -> Self {
+impl<'a> App<'a> {
+    pub fn new(daily_view: &'a mut dyn View, monthly_view: &'a mut dyn View) -> Self {
         Self {
             state: AppState::Running,
-            curr_view: AppView::default(),
-            daily: DailyView::new(),
-            monthly: MonthlyView::new(),
             journal: Journal::new(),
+            focused: Focused::default(),
+            main_view: ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
         }
     }
 
@@ -55,9 +54,9 @@ impl App {
     }
 
     fn update<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {
-        match self.curr_view {
-            AppView::Daily => { /* TODO */ }
-            AppView::Monthly => self.monthly.update(),
+        match self.focused {
+            Focused::Journal => todo!(),
+            Focused::MainView => self.main_view.update(),
         }
 
         term.draw(|frame| self.draw(frame))?;
@@ -68,37 +67,30 @@ impl App {
     }
 
     fn handle_events(&mut self) -> Result<()> {
-        match event::read()? {
-            Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => {
-                self.handle_key_press_ev(key_ev)?
-            }
+        let e = event::read()?;
+        match e {
+            Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
+                KeyCode::Char('q') => self.exit(),
+                _ => {}
+            },
 
             _ => {}
         }
-        Ok(())
-    }
 
-    fn handle_key_press_ev(&mut self, key_ev: KeyEvent) -> Result<()> {
-        match key_ev.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Char('v') => self.change_mode(),
-            _ => match self.curr_view {
-                AppView::Daily => self.daily.handle_key_press_ev(key_ev),
-                AppView::Monthly => self.monthly.handle_key_press_ev(key_ev),
-            },
+        match self.focused {
+            Focused::Journal => todo!(),
+            Focused::MainView => self.main_view.handle_event(e),
         }
-
-        Ok(())
     }
 
     fn exit(&mut self) {
         self.state = AppState::Exiting;
     }
 
-    fn change_mode(&mut self) {
-        match self.curr_view {
-            AppView::Daily => self.curr_view = AppView::Monthly,
-            AppView::Monthly => self.curr_view = AppView::Daily,
+    fn change_focus(&mut self) {
+        match self.focused {
+            Focused::Journal => self.focused = Focused::MainView,
+            Focused::MainView => self.focused = Focused::Journal,
         }
     }
 
@@ -107,11 +99,8 @@ impl App {
     }
 }
 
-impl Widget for &App {
+impl<'a> Widget for &App<'a> {
     fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
-        match self.curr_view {
-            AppView::Daily => render_layout(area, buf, &self.daily, &self.journal),
-            AppView::Monthly => render_layout(area, buf, &self.monthly, &self.journal),
-        }
+        render_layout(area, buf, &self.main_view, &self.journal);
     }
 }

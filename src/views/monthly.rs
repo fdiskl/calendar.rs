@@ -7,7 +7,12 @@ use ratatui::{
     widgets::{Block, Widget},
 };
 
-use crate::views::{common::utils::month_info, monthly::cursor::Cursor};
+use anyhow::Result;
+
+use crate::views::{
+    common::{utils::month_info, view::View},
+    monthly::cursor::Cursor,
+};
 
 mod cursor;
 mod render;
@@ -34,7 +39,7 @@ impl MonthlyView {
         }
     }
 
-    pub fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {
+    fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {
         // TODO: move keys to cfg
         match key_ev.code {
             KeyCode::Char('n') => {
@@ -79,18 +84,18 @@ impl MonthlyView {
             _ => unreachable!(),
         }
     }
+}
 
-    pub fn update(&mut self) {
+impl View for MonthlyView {
+    fn update(&mut self) {
         let (first_day_idx, days_in_month) = month_info(self.curr_year, self.curr_month);
         self.first_day = first_day_idx;
         self.month_len = days_in_month;
 
         self.c.set_max_day(self.month_len);
     }
-}
 
-impl Widget for &MonthlyView {
-    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
+    fn render(&self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         let title = Line::from(
             (match self.curr_month {
                 1 => "JANUARY",
@@ -123,5 +128,9 @@ impl Widget for &MonthlyView {
         block.render(area, buf);
 
         self.render_main_grid(inner_area, buf);
+    }
+
+    fn handle_event(&mut self, e: ratatui::crossterm::event::Event) -> Result<()> {
+        todo!()
     }
 }

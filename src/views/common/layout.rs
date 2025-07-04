@@ -3,12 +3,14 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
+use crate::views::common::view::View;
+
 // renders main 3/4 of w and journal 1/4 of w
-pub fn render_layout<W: Widget, JW: Widget>(
+pub fn render_layout<W: View, JW: View>(
     area: ratatui::prelude::Rect,
     buf: &mut ratatui::prelude::Buffer,
-    main: W,
-    j: JW,
+    main: &W,
+    j: &JW,
 ) {
     main.render(
         Rect::new(area.x, area.y, area.width * 3 / 4, area.height),
