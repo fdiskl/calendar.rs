@@ -14,7 +14,7 @@ pub struct ViewSwitcher<'a> {
     curr_view_idx: usize,
     switch_char: char,
 
-    views: Vec<&'a mut dyn View>,
+    views: Vec<&'a mut dyn FocusableView>,
 
     focused: bool,
 }
@@ -29,16 +29,16 @@ impl<'a> ViewSwitcher<'a> {
         }
     }
 
-    pub fn with_views(mut self, views: Vec<&'a mut dyn View>) -> Self {
+    pub fn with_views(mut self, views: Vec<&'a mut dyn FocusableView>) -> Self {
         self.views = views;
         self
     }
 
-    fn curr_view(&self) -> &dyn View {
+    fn curr_view(&self) -> &dyn FocusableView {
         return self.views[self.curr_view_idx];
     }
 
-    fn mut_curr_view(&mut self) -> &mut dyn View {
+    fn mut_curr_view(&mut self) -> &mut dyn FocusableView {
         return self.views[self.curr_view_idx];
     }
 
@@ -58,17 +58,16 @@ impl<'a> View for ViewSwitcher<'a> {
 
     fn handle_event(&mut self, e: &Event) -> Result<()> {
         // handle view switching
-        match e {
-            Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
-                KeyCode::Char(v) if v == self.switch_char => {
-                    self.next_view();
+        if let Event::Key(key_ev) = e {
+            if key_ev.kind == KeyEventKind::Press {
+                if let KeyCode::Char(v) = key_ev.code {
+                    if v == self.switch_char {
+                        self.next_view();
+                    }
                 }
-                _ => {}
-            },
-            _ => {}
+            }
         }
-
-        self.mut_curr_view().handle_event(e)
+        Ok(())
     }
 
     fn update(&mut self) {
@@ -79,28 +78,25 @@ impl<'a> View for ViewSwitcher<'a> {
 impl<'a> Focusable for ViewSwitcher<'a> {
     fn focus(&mut self) {
         self.focused = true;
+        self.mut_curr_view().focus();
     }
 
     fn unfocus(&mut self) {
         self.focused = false;
+        self.mut_curr_view().unfocus();
     }
 
     fn toggle_focus(&mut self) {
         self.focused = !self.focused;
-    }
-
-    fn focused(mut self) -> Self {
-        self.focused = true;
-        self
+        self.mut_curr_view().toggle_focus();
     }
 }
 
 impl<'a> FocusableView for ViewSwitcher<'a> {
     fn handle_event_if_focused(&mut self, e: &Event) -> Result<()> {
         if self.focused {
-            self.handle_event(e)
-        } else {
-            Ok(())
+            self.handle_event(e)?
         }
+        self.mut_curr_view().handle_event_if_focused(e)
     }
 }

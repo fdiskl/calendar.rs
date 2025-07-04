@@ -30,14 +30,19 @@ pub struct App<'a> {
 }
 
 impl<'a> App<'a> {
-    pub fn new(daily_view: &'a mut dyn View, monthly_view: &'a mut dyn View) -> Self {
-        Self {
+    pub fn new(
+        daily_view: &'a mut dyn FocusableView,
+        monthly_view: &'a mut dyn FocusableView,
+    ) -> Self {
+        let mut s = Self {
             state: AppState::Running,
             journal: Journal::new(),
-            main_view: ViewSwitcher::new('v')
-                .with_views(vec![daily_view, monthly_view])
-                .focused(),
-        }
+            main_view: ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
+        };
+
+        s.main_view.focus();
+
+        s
     }
 
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {

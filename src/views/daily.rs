@@ -7,13 +7,18 @@ use ratatui::{
 
 use anyhow::Result;
 
-use crate::views::common::view::View;
+use crate::views::common::{
+    focusable::Focusable,
+    view::{FocusableView, View},
+};
 
-pub struct DailyView {}
+pub struct DailyView {
+    focused: bool,
+}
 
 impl DailyView {
     pub fn new() -> Self {
-        Self {}
+        Self { focused: false }
     }
 }
 
@@ -31,4 +36,28 @@ impl View for DailyView {
     }
 
     fn update(&mut self) {}
+}
+
+impl Focusable for DailyView {
+    fn focus(&mut self) {
+        self.focused = true;
+    }
+
+    fn unfocus(&mut self) {
+        self.focused = false;
+    }
+
+    fn toggle_focus(&mut self) {
+        self.focused = !self.focused
+    }
+}
+
+impl FocusableView for DailyView {
+    fn handle_event_if_focused(&mut self, e: &Event) -> Result<()> {
+        if self.focused {
+            self.handle_event(e)
+        } else {
+            Ok(())
+        }
+    }
 }

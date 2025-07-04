@@ -2,7 +2,7 @@ use chrono::{Datelike, Local};
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
     layout::Alignment,
-    style::Stylize,
+    style::{Color, Stylize},
     text::Line,
     widgets::{Block, Widget},
 };
@@ -10,7 +10,12 @@ use ratatui::{
 use anyhow::Result;
 
 use crate::views::{
-    common::{utils::month_info, view::View},
+    common::{
+        focusable::Focusable,
+        styles::title_style,
+        utils::month_info,
+        view::{FocusableView, View},
+    },
     monthly::cursor::Cursor,
 };
 
@@ -24,6 +29,8 @@ pub struct MonthlyView {
     first_day: i32,
     month_len: i32,
 
+    focused: bool,
+
     c: Cursor,
 }
 
@@ -36,6 +43,7 @@ impl MonthlyView {
             c: Cursor::new().with_w(7).with_h(6),
             first_day: 0,
             month_len: 0,
+            focused: false,
         }
     }
 
@@ -119,10 +127,11 @@ impl View for MonthlyView {
             .to_string()
                 + " "
                 + &self.curr_year.to_string())
-                .bold(),
+                .fg(Color::Green)
+                .style(title_style(self.focused)),
         );
 
-        let block = Block::new().title(title.alignment(Alignment::Left));
+        let block = Block::new().title(title.alignment(Alignment::Center));
         let mut inner_area = block.inner(area);
 
         // little offset
@@ -140,6 +149,30 @@ impl View for MonthlyView {
                 self.handle_key_press_ev(key_ev)
             }
             _ => Ok(()),
+        }
+    }
+}
+
+impl Focusable for MonthlyView {
+    fn focus(&mut self) {
+        self.focused = true;
+    }
+
+    fn unfocus(&mut self) {
+        self.focused = false;
+    }
+
+    fn toggle_focus(&mut self) {
+        self.focused = !self.focused
+    }
+}
+
+impl FocusableView for MonthlyView {
+    fn handle_event_if_focused(&mut self, e: &Event) -> Result<()> {
+        if self.focused {
+            self.handle_event(e)
+        } else {
+            Ok(())
         }
     }
 }

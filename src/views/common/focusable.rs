@@ -3,6 +3,4 @@ pub trait Focusable {
     fn unfocus(&mut self);
 
     fn toggle_focus(&mut self);
-
-    fn focused(self) -> Self;
 }
