@@ -1,16 +1,19 @@
 use anyhow::Result;
 use ratatui::{
     Frame, Terminal,
-    crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
+    crossterm::event::{self, Event, KeyCode, KeyEventKind},
     prelude::Backend,
     widgets::Widget,
 };
 
 use crate::views::{
-    common::{layout::render_layout, view::View, view_switcher::ViewSwitcher},
-    daily::DailyView,
+    common::{
+        focusable::Focusable,
+        layout::render_layout,
+        view::{FocusableView, View},
+        view_switcher::ViewSwitcher,
+    },
     journal::Journal,
-    monthly::MonthlyView,
 };
 
 enum AppState {
@@ -18,17 +21,9 @@ enum AppState {
     Exiting,
 }
 
-#[derive(Default)]
-enum Focused {
-    Journal,
-    #[default]
-    MainView,
-}
-
 pub struct App<'a> {
     state: AppState,
 
-    focused: Focused,
     main_view: ViewSwitcher<'a>,
 
     journal: Journal,
@@ -39,8 +34,9 @@ impl<'a> App<'a> {
         Self {
             state: AppState::Running,
             journal: Journal::new(),
-            focused: Focused::default(),
-            main_view: ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
+            main_view: ViewSwitcher::new('v')
+                .with_views(vec![daily_view, monthly_view])
+                .focused(),
         }
     }
 
@@ -54,10 +50,8 @@ impl<'a> App<'a> {
     }
 
     fn update<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {
-        match self.focused {
-            Focused::Journal => todo!(),
-            Focused::MainView => self.main_view.update(),
-        }
+        self.journal.update();
+        self.main_view.update();
 
         term.draw(|frame| self.draw(frame))?;
 
@@ -71,16 +65,15 @@ impl<'a> App<'a> {
         match e {
             Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
                 KeyCode::Char('q') => self.exit(),
+                KeyCode::Char(' ') => self.change_focus(),
                 _ => {}
             },
 
             _ => {}
         }
 
-        match self.focused {
-            Focused::Journal => todo!(),
-            Focused::MainView => self.main_view.handle_event(e),
-        }
+        self.journal.handle_event_if_focused(&e)?;
+        self.main_view.handle_event_if_focused(&e)
     }
 
     fn exit(&mut self) {
@@ -88,10 +81,8 @@ impl<'a> App<'a> {
     }
 
     fn change_focus(&mut self) {
-        match self.focused {
-            Focused::Journal => self.focused = Focused::MainView,
-            Focused::MainView => self.focused = Focused::Journal,
-        }
+        self.main_view.toggle_focus();
+        self.journal.toggle_focus();
     }
 
     fn draw(&self, frame: &mut Frame) {

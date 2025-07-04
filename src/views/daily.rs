@@ -1,7 +1,6 @@
 use ratatui::{
-    crossterm::event::KeyEvent,
+    crossterm::event::Event,
     style::Stylize,
-    symbols::border,
     text::Line,
     widgets::{Block, Widget},
 };
@@ -27,11 +26,9 @@ impl View for DailyView {
         block.render(area, buf);
     }
 
-    fn handle_event(&mut self, e: ratatui::crossterm::event::Event) -> Result<()> {
-        todo!()
+    fn handle_event(&mut self, e: &Event) -> Result<()> {
+        Ok(())
     }
 
-    fn update(&mut self) {
-        todo!()
-    }
+    fn update(&mut self) {}
 }

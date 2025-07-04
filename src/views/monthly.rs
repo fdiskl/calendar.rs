@@ -1,6 +1,6 @@
 use chrono::{Datelike, Local};
 use ratatui::{
-    crossterm::event::{KeyCode, KeyEvent},
+    crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind},
     layout::Alignment,
     style::Stylize,
     text::Line,
@@ -39,7 +39,7 @@ impl MonthlyView {
         }
     }
 
-    fn handle_key_press_ev(&mut self, key_ev: KeyEvent) {
+    fn handle_key_press_ev(&mut self, key_ev: &KeyEvent) -> Result<()> {
         // TODO: move keys to cfg
         match key_ev.code {
             KeyCode::Char('n') => {
@@ -68,13 +68,15 @@ impl MonthlyView {
             | KeyCode::Down
             | KeyCode::Left
             | KeyCode::Up
-            | KeyCode::Right => self.handle_movement_keys(key_ev.code),
+            | KeyCode::Right => self.handle_movement_keys(key_ev.code)?,
 
             _ => {}
-        }
+        };
+
+        Ok(())
     }
 
-    fn handle_movement_keys(&mut self, code: KeyCode) {
+    fn handle_movement_keys(&mut self, code: KeyCode) -> Result<()> {
         match code {
             KeyCode::Char('h') | KeyCode::Left => self.c.move_left(),
             KeyCode::Char('j') | KeyCode::Down => self.c.move_bottom(),
@@ -83,6 +85,8 @@ impl MonthlyView {
 
             _ => unreachable!(),
         }
+
+        Ok(())
     }
 }
 
@@ -130,7 +134,12 @@ impl View for MonthlyView {
         self.render_main_grid(inner_area, buf);
     }
 
-    fn handle_event(&mut self, e: ratatui::crossterm::event::Event) -> Result<()> {
-        todo!()
+    fn handle_event(&mut self, e: &Event) -> Result<()> {
+        match e {
+            Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => {
+                self.handle_key_press_ev(key_ev)
+            }
+            _ => Ok(()),
+        }
     }
 }
