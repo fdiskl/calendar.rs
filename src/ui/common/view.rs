@@ -23,3 +23,5 @@ pub trait ViewWithCursorControl: View {
         set_cursor: &mut dyn FnMut(u16, u16),
     );
 }
+
+pub trait FocusableViewWithCursorControl: FocusableView + ViewWithCursorControl {}

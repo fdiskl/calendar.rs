@@ -7,6 +7,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear},
 };
 
+use crate::ui::common::view::FocusableViewWithCursorControl;
 use crate::ui::{
     common::{
         focusable::Focusable,
@@ -108,4 +109,8 @@ where
                 .render_with_cursor(inner, buf, set_cursor);
         }
     }
+}
+impl<V> FocusableViewWithCursorControl for PopupWithCursorControl<'_, V> where
+    V: FocusableView + ViewWithCursorControl
+{
 }

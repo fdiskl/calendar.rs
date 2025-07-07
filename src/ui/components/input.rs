@@ -10,7 +10,9 @@ use ratatui::{
 };
 
 use crate::ui::common::focusable::Focusable;
-use crate::ui::common::view::{FocusableView, View, ViewWithCursorControl};
+use crate::ui::common::view::{
+    FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl,
+};
 
 pub struct UserInput {
     pub title: String,
@@ -131,3 +133,5 @@ impl FocusableView for UserInput {
         }
     }
 }
+
+impl FocusableViewWithCursorControl for UserInput {}

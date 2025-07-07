@@ -64,14 +64,6 @@ impl<'a, V: FocusableView> Popup<'a, V> {
 
 impl<V: FocusableView> View for Popup<'_, V> {
     fn handle_event(&mut self, e: &ratatui::crossterm::event::Event) -> anyhow::Result<()> {
-        match e {
-            Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
-                KeyCode::Char('q') | KeyCode::Esc => self.unfocus(),
-                _ => {}
-            },
-            _ => {}
-        }
-
         Ok(())
     }
 
