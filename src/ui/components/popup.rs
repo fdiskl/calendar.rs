@@ -1,5 +1,6 @@
 use ratatui::{
     crossterm::event::{Event, KeyCode, KeyEventKind},
+    layout::Alignment,
     style::{Style, Stylize},
     widgets::{Block, Borders, Clear, Widget},
 };
@@ -10,7 +11,7 @@ use crate::ui::common::{
 };
 
 // Popup open state can be controlled using Focusable trait
-pub struct Popup<'a, V: View> {
+pub struct Popup<'a, V: FocusableView> {
     title: &'a str,
     content: V,
     border_style: Style,
@@ -18,7 +19,7 @@ pub struct Popup<'a, V: View> {
     open: bool,
 }
 
-impl<'a, V: View> Popup<'a, V> {
+impl<'a, V: FocusableView> Popup<'a, V> {
     pub fn new(
         title: &'a str,
         content: V,
@@ -39,9 +40,29 @@ impl<'a, V: View> Popup<'a, V> {
             },
         }
     }
+
+    pub fn title(&self) -> &str {
+        self.title
+    }
+
+    pub fn title_style(&self) -> Style {
+        self.title_style
+    }
+
+    pub fn border_style(&self) -> Style {
+        self.border_style
+    }
+
+    pub fn content(&self) -> &V {
+        &self.content
+    }
+
+    pub fn open(&self) -> bool {
+        self.open
+    }
 }
 
-impl<V: View> View for Popup<'_, V> {
+impl<V: FocusableView> View for Popup<'_, V> {
     fn handle_event(&mut self, e: &ratatui::crossterm::event::Event) -> anyhow::Result<()> {
         match e {
             Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
@@ -59,39 +80,45 @@ impl<V: View> View for Popup<'_, V> {
     }
 
     fn render(&self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
-        Clear.render(area, buf);
-        let block = Block::new()
-            .title(self.title)
-            .title_style(self.title_style)
-            .borders(Borders::ALL)
-            .border_style(self.border_style);
+        if self.open {
+            Clear.render(area, buf);
+            let block = Block::new()
+                .title(self.title)
+                .title_alignment(Alignment::Center)
+                .title_style(self.title_style)
+                .borders(Borders::ALL)
+                .border_style(self.border_style);
 
-        let inner = block.inner(area);
-        self.content.render(inner, buf);
+            let inner = block.inner(area);
+            block.render(area, buf);
+
+            self.content.render(inner, buf);
+        }
     }
 }
 
-impl<V: View> Focusable for Popup<'_, V> {
+impl<V: FocusableView> Focusable for Popup<'_, V> {
     fn focus(&mut self) {
         self.open = true;
+        self.content.focus();
     }
 
     fn unfocus(&mut self) {
         self.open = false;
+        self.content.unfocus();
     }
 
     fn toggle_focus(&mut self) {
         self.open = !self.open;
+        self.content.toggle_focus();
     }
 }
 
-impl<V: View> FocusableView for Popup<'_, V> {
+impl<V: FocusableView> FocusableView for Popup<'_, V> {
     fn handle_event_if_focused(&mut self, e: &Event) -> anyhow::Result<()> {
         if self.open {
             self.handle_event(e)?;
-            self.content.handle_event(e)
-        } else {
-            Ok(())
         }
+        self.content.handle_event_if_focused(e)
     }
 }

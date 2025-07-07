@@ -76,7 +76,7 @@ impl View for UserInput {
     fn update(&mut self) {}
 
     fn render(&self, area: Rect, buf: &mut Buffer) {
-        ViewWithCursorControl::render(self, area, buf);
+        self.render_with_cursor(area, buf, &mut |_x, _y| {});
     }
 }
 
