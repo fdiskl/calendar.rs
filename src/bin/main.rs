@@ -1,7 +1,7 @@
 use anyhow::Result;
 use taskrs::{
     app::App,
-    views::{daily::DailyView, monthly::MonthlyView},
+    ui::{daily::DailyView, monthly::MonthlyView},
 };
 
 fn main() -> Result<()> {

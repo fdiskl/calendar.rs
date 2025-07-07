@@ -3,7 +3,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
-use crate::views::common::view::View;
+use crate::ui::common::view::View;
 
 // renders main 3/4 of w and journal 1/4 of w
 pub fn render_layout<W: View, JW: View>(

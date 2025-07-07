@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
-use crate::views::monthly::MonthlyView;
+use crate::ui::monthly::MonthlyView;
 
 impl MonthlyView {
     fn render_days_titles(&self, inner_area: Rect, buf: &mut ratatui::prelude::Buffer) {

@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use ratatui::{buffer::Buffer, crossterm::event::Event, layout::Rect};
 
-use crate::views::common::focusable::Focusable;
+use crate::ui::common::focusable::Focusable;
 
 // extended widget trait
 pub trait View {

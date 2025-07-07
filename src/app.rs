@@ -6,7 +6,7 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::views::{
+use crate::ui::{
     common::{
         focusable::Focusable,
         layout::render_layout,

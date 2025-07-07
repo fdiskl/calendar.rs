@@ -1,11 +1,10 @@
 use ratatui::{
     crossterm::event::Event,
     layout::Alignment,
-    style::{Modifier, Stylize},
     widgets::{Block, Widget},
 };
 
-use crate::views::common::{
+use crate::ui::common::{
     focusable::Focusable,
     styles::title_style,
     view::{FocusableView, View},

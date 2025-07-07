@@ -9,7 +9,7 @@ use ratatui::{
 
 use anyhow::Result;
 
-use crate::views::{
+use crate::ui::{
     common::{
         focusable::Focusable,
         styles::title_style,

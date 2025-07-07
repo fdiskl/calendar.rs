@@ -3,7 +3,7 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::views::common::{
+use crate::ui::common::{
     focusable::Focusable,
     view::{FocusableView, View},
 };
