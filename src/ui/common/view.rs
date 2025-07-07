@@ -14,3 +14,16 @@ pub trait View {
 pub trait FocusableView: View + Focusable {
     fn handle_event_if_focused(&mut self, e: &Event) -> Result<()>;
 }
+
+pub trait ViewWithCursorControl: View {
+    fn render_with_cursor(
+        &self,
+        area: Rect,
+        buf: &mut Buffer,
+        set_cursor: &mut dyn FnMut(u16, u16),
+    );
+
+    fn render(&self, area: Rect, buf: &mut Buffer) {
+        self.render_with_cursor(area, buf, &mut |_x, _y| {});
+    }
+}
