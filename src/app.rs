@@ -12,9 +12,8 @@ use crate::ui::{
         focusable::Focusable,
         layout::render_layout,
         view::{FocusableView, View, ViewWithCursorControl},
-        view_switcher::ViewSwitcher,
     },
-    components::input_popup::InputPopup,
+    components::{input_popup::InputPopup, view_switcher::ViewSwitcher},
     journal::Journal,
 };
 
