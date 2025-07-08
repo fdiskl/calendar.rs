@@ -130,6 +130,7 @@ where
         e: &ratatui::crossterm::event::Event,
     ) -> anyhow::Result<()> {
         if self.focused {
+            self.handle_event(e)?;
             self.v.handle_event_if_focused(e)?;
             self.j.handle_event_if_focused(e)?;
         }

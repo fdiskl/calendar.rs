@@ -34,7 +34,7 @@ impl<'a> App<'a> {
         let s = Self {
             state: AppState::Running,
             main: PopupHost::new(Layout::new(
-                ViewSwitcher::new('v').with_views(vec![monthly_view, daily_view]),
+                ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
                 Journal::new(),
             ))
             .with_popups(

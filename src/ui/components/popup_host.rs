@@ -57,8 +57,11 @@ where
     fn hide(&mut self) {
         if let Some(active) = self.active_popup_mut() {
             active.unfocus();
-            self.inner.focus();
         }
+
+        self.active_popup = None;
+
+        self.inner.focus();
     }
 
     fn active_popup_mut(&mut self) -> Option<&mut Box<dyn FocusableViewWithCursorControl>> {
@@ -84,8 +87,10 @@ impl<V: FocusableView> View for PopupHost<V> {
             Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
                 KeyCode::Esc => self.hide(),
                 k => {
-                    if let Some(idx) = self.popups_triggers.iter().position(|&x| x == k) {
-                        self.show(idx);
+                    if let None = self.active_popup {
+                        if let Some(idx) = self.popups_triggers.iter().position(|&x| x == k) {
+                            self.show(idx);
+                        }
                     }
                 }
             },
@@ -94,8 +99,8 @@ impl<V: FocusableView> View for PopupHost<V> {
         }
 
         match self.active_popup {
-            Some(v) => self.popups[v].handle_event(e)?,
-            None => self.inner.handle_event(e)?,
+            Some(v) => self.popups[v].handle_event_if_focused(e)?,
+            None => self.inner.handle_event_if_focused(e)?,
         }
         Ok(())
     }
