@@ -15,10 +15,10 @@ use crate::ui::common::view::{
 };
 
 pub struct UserInput {
-    pub title: String,
-    pub input: String,
-    pub cursor_position: usize,
-    pub focused: bool,
+    title: String,
+    input: String,
+    cursor_position: usize,
+    focused: bool,
 }
 
 impl UserInput {
@@ -29,6 +29,10 @@ impl UserInput {
             cursor_position: 0,
             focused: true,
         }
+    }
+
+    pub fn content(&self) -> &str {
+        &self.input
     }
 }
 

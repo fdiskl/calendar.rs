@@ -1,3 +1,4 @@
+pub mod ics_popup;
 pub mod input;
 pub mod input_popup;
 pub mod layout;
