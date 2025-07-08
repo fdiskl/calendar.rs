@@ -11,7 +11,7 @@ use ratatui::{
 
 use crate::ui::common::focusable::Focusable;
 use crate::ui::common::view::{
-    FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl,
+    FocusableView, FocusableViewWithCursorControl, Resettable, View, ViewWithCursorControl,
 };
 
 pub struct UserInput {
@@ -135,3 +135,12 @@ impl FocusableView for UserInput {
 }
 
 impl FocusableViewWithCursorControl for UserInput {}
+
+impl Resettable for UserInput {
+    fn reset(&mut self) -> Result<()> {
+        self.input = String::new();
+        self.cursor_position = 0;
+
+        Ok(())
+    }
+}

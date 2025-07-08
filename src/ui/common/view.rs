@@ -24,4 +24,10 @@ pub trait ViewWithCursorControl: View {
     );
 }
 
+pub trait Resettable {
+    fn reset(&mut self) -> Result<()>;
+}
+
 pub trait FocusableViewWithCursorControl: FocusableView + ViewWithCursorControl {}
+
+pub trait PopupView: FocusableViewWithCursorControl + Resettable {}

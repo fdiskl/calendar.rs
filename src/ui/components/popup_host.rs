@@ -1,8 +1,7 @@
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEventKind};
 
-use crate::ui::common::{
-    focusable::Focusable,
-    view::{FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl},
+use crate::ui::common::view::{
+    FocusableView, FocusableViewWithCursorControl, PopupView, View, ViewWithCursorControl,
 };
 
 pub struct PopupHost<V>
@@ -10,7 +9,7 @@ where
     V: FocusableView,
 {
     inner: V,
-    popups: Vec<Box<dyn FocusableViewWithCursorControl>>,
+    popups: Vec<Box<dyn PopupView>>,
 
     popups_triggers: Vec<KeyCode>,
 
@@ -36,7 +35,7 @@ where
 
     pub fn with_popups(
         mut self,
-        popups: Vec<Box<dyn FocusableViewWithCursorControl>>,
+        popups: Vec<Box<dyn PopupView>>,
         popups_triggers: Vec<KeyCode>,
     ) -> Self {
         self.popups = popups;
@@ -51,7 +50,10 @@ where
 
         self.active_popup = Some(idx);
         self.inner.unfocus();
-        self.popups[idx].focus();
+
+        if let Ok(_) = self.popups[idx].reset() {
+            self.popups[idx].focus();
+        }
     }
 
     fn hide(&mut self) {
@@ -64,7 +66,7 @@ where
         self.inner.focus();
     }
 
-    fn active_popup_mut(&mut self) -> Option<&mut Box<dyn FocusableViewWithCursorControl>> {
+    fn active_popup_mut(&mut self) -> Option<&mut Box<dyn PopupView>> {
         if let Some(active_idx) = self.active_popup {
             Some(&mut self.popups[active_idx])
         } else {
@@ -72,7 +74,7 @@ where
         }
     }
 
-    fn active_popup(&self) -> Option<&Box<dyn FocusableViewWithCursorControl>> {
+    fn active_popup(&self) -> Option<&Box<dyn PopupView>> {
         if let Some(active_idx) = self.active_popup {
             Some(&self.popups[active_idx])
         } else {
@@ -90,6 +92,7 @@ impl<V: FocusableView> View for PopupHost<V> {
                     if let None = self.active_popup {
                         if let Some(idx) = self.popups_triggers.iter().position(|&x| x == k) {
                             self.show(idx);
+                            return Ok(()); // if we open popup we won't pass events down for anyone
                         }
                     }
                 }

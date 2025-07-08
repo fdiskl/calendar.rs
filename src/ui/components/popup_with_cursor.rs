@@ -8,12 +8,15 @@ use ratatui::{
 
 use crate::ui::common::{
     focusable::Focusable,
-    view::{FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl},
+    view::{
+        FocusableView, FocusableViewWithCursorControl, PopupView, Resettable, View,
+        ViewWithCursorControl,
+    },
 };
 
 pub struct Popup<'a, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     title: &'a str,
     content: V,
@@ -24,7 +27,7 @@ where
 
 impl<'a, V> Popup<'a, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     pub fn new(
         title: &'a str,
@@ -60,7 +63,7 @@ where
 
 impl<V> View for Popup<'_, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     fn handle_event(&mut self, e: &Event) -> anyhow::Result<()> {
         Ok(())
@@ -89,7 +92,7 @@ where
 
 impl<V> ViewWithCursorControl for Popup<'_, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     fn render_with_cursor(
         &self,
@@ -115,7 +118,7 @@ where
 
 impl<V> Focusable for Popup<'_, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     fn focus(&mut self) {
         self.open = true;
@@ -135,7 +138,7 @@ where
 
 impl<V> FocusableView for Popup<'_, V>
 where
-    V: FocusableView + ViewWithCursorControl,
+    V: FocusableView + ViewWithCursorControl + Resettable,
 {
     fn handle_event_if_focused(&mut self, e: &Event) -> anyhow::Result<()> {
         if self.open {
@@ -146,6 +149,17 @@ where
 }
 
 impl<V> FocusableViewWithCursorControl for Popup<'_, V> where
-    V: FocusableView + ViewWithCursorControl
+    V: FocusableView + ViewWithCursorControl + Resettable
 {
 }
+
+impl<V> Resettable for Popup<'_, V>
+where
+    V: FocusableView + ViewWithCursorControl + Resettable,
+{
+    fn reset(&mut self) -> anyhow::Result<()> {
+        self.content.reset()
+    }
+}
+
+impl<V> PopupView for Popup<'_, V> where V: FocusableView + ViewWithCursorControl + Resettable {}
