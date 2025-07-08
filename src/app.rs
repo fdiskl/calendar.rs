@@ -8,18 +8,11 @@ use ratatui::{
 };
 
 use crate::ui::{
-    common::{
-        focusable::Focusable,
-        layout::render_layout,
-        popup::MultiPopup,
-        view::{FocusableView, View, ViewWithCursorControl},
-    },
+    common::view::{FocusableView, View, ViewWithCursorControl},
     components::{
         input_popup::InputPopup, layout::Layout, popup_host::PopupHost, view_switcher::ViewSwitcher,
     },
-    daily::DailyView,
     journal::Journal,
-    monthly::MonthlyView,
 };
 
 enum AppState {
@@ -45,11 +38,11 @@ impl<'a> App<'a> {
                 Journal::new(),
             ))
             .with_popups(
-                vec![MultiPopup::C(Box::new(InputPopup::new_input_popup(
+                vec![Box::new(InputPopup::new_input_popup(
                     "Your .ics file",
                     None,
                     None,
-                )))],
+                ))],
                 vec![KeyCode::Char('i')],
             ),
         };

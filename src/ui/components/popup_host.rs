@@ -1,11 +1,8 @@
-use std::ops::Mul;
-
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::ui::common::{
     focusable::Focusable,
-    popup::MultiPopup,
-    view::{FocusableView, View, ViewWithCursorControl},
+    view::{FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl},
 };
 
 pub struct PopupHost<V>
@@ -13,7 +10,7 @@ where
     V: FocusableView,
 {
     inner: V,
-    popups: Vec<MultiPopup>,
+    popups: Vec<Box<dyn FocusableViewWithCursorControl>>,
 
     popups_triggers: Vec<KeyCode>,
 
@@ -37,7 +34,11 @@ where
         s
     }
 
-    pub fn with_popups(mut self, popups: Vec<MultiPopup>, popups_triggers: Vec<KeyCode>) -> Self {
+    pub fn with_popups(
+        mut self,
+        popups: Vec<Box<dyn FocusableViewWithCursorControl>>,
+        popups_triggers: Vec<KeyCode>,
+    ) -> Self {
         self.popups = popups;
         self.popups_triggers = popups_triggers;
         self
@@ -60,7 +61,7 @@ where
         }
     }
 
-    fn active_popup_mut(&mut self) -> Option<&mut MultiPopup> {
+    fn active_popup_mut(&mut self) -> Option<&mut Box<dyn FocusableViewWithCursorControl>> {
         if let Some(active_idx) = self.active_popup {
             Some(&mut self.popups[active_idx])
         } else {
@@ -68,7 +69,7 @@ where
         }
     }
 
-    fn active_popup(&self) -> Option<&MultiPopup> {
+    fn active_popup(&self) -> Option<&Box<dyn FocusableViewWithCursorControl>> {
         if let Some(active_idx) = self.active_popup {
             Some(&self.popups[active_idx])
         } else {
@@ -123,12 +124,7 @@ impl<V: FocusableView> ViewWithCursorControl for PopupHost<V> {
     ) {
         self.inner.render(area, buf);
         if let Some(active) = self.active_popup() {
-            match active {
-                MultiPopup::P(focusable_view) => focusable_view.render(area, buf),
-                MultiPopup::C(focusable_view_with_cursor_control) => {
-                    focusable_view_with_cursor_control.render_with_cursor(area, buf, set_cursor)
-                }
-            }
+            active.render_with_cursor(area, buf, set_cursor);
         }
     }
 }
