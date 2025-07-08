@@ -1,8 +1,8 @@
 use ratatui::style::Style;
 
-use crate::ui::components::{input::UserInput, popup_with_cursor::PopupWithCursorControl};
+use crate::ui::components::{input::UserInput, popup_with_cursor::Popup};
 
-pub type InputPopup<'a> = PopupWithCursorControl<'a, UserInput>;
+pub type InputPopup<'a> = Popup<'a, UserInput>;
 
 impl<'a> InputPopup<'a> {
     pub fn new_input_popup(

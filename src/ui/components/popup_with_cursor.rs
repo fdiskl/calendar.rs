@@ -1,29 +1,28 @@
-use ratatui::layout::Alignment;
-use ratatui::prelude::Widget;
 use ratatui::{
     crossterm::event::Event,
+    layout::Alignment,
     prelude::{Buffer, Rect},
-    style::Style,
-    widgets::{Block, Borders, Clear},
+    style::{Style, Stylize},
+    widgets::{Block, Borders, Clear, Widget},
 };
 
-use crate::ui::common::view::FocusableViewWithCursorControl;
-use crate::ui::{
-    common::{
-        focusable::Focusable,
-        view::{FocusableView, View, ViewWithCursorControl},
-    },
-    components::popup::Popup,
+use crate::ui::common::{
+    focusable::Focusable,
+    view::{FocusableView, FocusableViewWithCursorControl, View, ViewWithCursorControl},
 };
 
-pub struct PopupWithCursorControl<'a, V>
+pub struct Popup<'a, V>
 where
     V: FocusableView + ViewWithCursorControl,
 {
-    inner_popup: Popup<'a, V>,
+    title: &'a str,
+    content: V,
+    border_style: Style,
+    title_style: Style,
+    open: bool,
 }
 
-impl<'a, V> PopupWithCursorControl<'a, V>
+impl<'a, V> Popup<'a, V>
 where
     V: FocusableView + ViewWithCursorControl,
 {
@@ -34,55 +33,61 @@ where
         title_style: Option<Style>,
     ) -> Self {
         Self {
-            inner_popup: Popup::new(title, content, border_style, title_style),
+            title,
+            content,
+            border_style: border_style.unwrap_or_default(),
+            title_style: title_style.unwrap_or_else(|| Style::default().bold()),
+            open: false,
         }
+    }
+
+    pub fn open(&self) -> bool {
+        self.open
+    }
+
+    pub fn title(&self) -> &str {
+        self.title
+    }
+
+    pub fn title_style(&self) -> Style {
+        self.title_style
+    }
+
+    pub fn border_style(&self) -> Style {
+        self.border_style
     }
 }
 
-impl<V> View for PopupWithCursorControl<'_, V>
+impl<V> View for Popup<'_, V>
 where
     V: FocusableView + ViewWithCursorControl,
 {
     fn handle_event(&mut self, e: &Event) -> anyhow::Result<()> {
-        self.inner_popup.handle_event(e)
+        Ok(())
     }
 
     fn update(&mut self) {
-        self.inner_popup.update();
+        self.content.update();
     }
 
     fn render(&self, area: Rect, buf: &mut Buffer) {
-        self.inner_popup.render(area, buf);
+        if self.open {
+            Clear.render(area, buf);
+            let block = Block::new()
+                .title(self.title)
+                .title_alignment(Alignment::Center)
+                .title_style(self.title_style)
+                .borders(Borders::ALL)
+                .border_style(self.border_style);
+
+            let inner = block.inner(area);
+            block.render(area, buf);
+            self.content.render(inner, buf);
+        }
     }
 }
 
-impl<V> Focusable for PopupWithCursorControl<'_, V>
-where
-    V: FocusableView + ViewWithCursorControl,
-{
-    fn focus(&mut self) {
-        self.inner_popup.focus();
-    }
-
-    fn unfocus(&mut self) {
-        self.inner_popup.unfocus();
-    }
-
-    fn toggle_focus(&mut self) {
-        self.inner_popup.toggle_focus();
-    }
-}
-
-impl<V> FocusableView for PopupWithCursorControl<'_, V>
-where
-    V: FocusableView + ViewWithCursorControl,
-{
-    fn handle_event_if_focused(&mut self, e: &Event) -> anyhow::Result<()> {
-        self.inner_popup.handle_event_if_focused(e)
-    }
-}
-
-impl<V> ViewWithCursorControl for PopupWithCursorControl<'_, V>
+impl<V> ViewWithCursorControl for Popup<'_, V>
 where
     V: FocusableView + ViewWithCursorControl,
 {
@@ -92,25 +97,55 @@ where
         buf: &mut Buffer,
         set_cursor: &mut dyn FnMut(u16, u16),
     ) {
-        if self.inner_popup.open() {
+        if self.open {
             Clear.render(area, buf);
             let block = Block::new()
-                .title(self.inner_popup.title())
+                .title(self.title)
                 .title_alignment(Alignment::Center)
-                .title_style(self.inner_popup.title_style())
+                .title_style(self.title_style)
                 .borders(Borders::ALL)
-                .border_style(self.inner_popup.border_style());
+                .border_style(self.border_style);
 
             let inner = block.inner(area);
             block.render(area, buf);
-
-            self.inner_popup
-                .content()
-                .render_with_cursor(inner, buf, set_cursor);
+            self.content.render_with_cursor(inner, buf, set_cursor);
         }
     }
 }
-impl<V> FocusableViewWithCursorControl for PopupWithCursorControl<'_, V> where
+
+impl<V> Focusable for Popup<'_, V>
+where
+    V: FocusableView + ViewWithCursorControl,
+{
+    fn focus(&mut self) {
+        self.open = true;
+        self.content.focus();
+    }
+
+    fn unfocus(&mut self) {
+        self.open = false;
+        self.content.unfocus();
+    }
+
+    fn toggle_focus(&mut self) {
+        self.open = !self.open;
+        self.content.toggle_focus();
+    }
+}
+
+impl<V> FocusableView for Popup<'_, V>
+where
+    V: FocusableView + ViewWithCursorControl,
+{
+    fn handle_event_if_focused(&mut self, e: &Event) -> anyhow::Result<()> {
+        if self.open {
+            self.handle_event(e)?;
+        }
+        self.content.handle_event_if_focused(e)
+    }
+}
+
+impl<V> FocusableViewWithCursorControl for Popup<'_, V> where
     V: FocusableView + ViewWithCursorControl
 {
 }
