@@ -5,7 +5,7 @@ use ratatui::{
 };
 
 use crate::ui::common::{
-    focusable::Focusable,
+    focusable::{FocusStatus, Focusable},
     styles::title_style,
     view::{FocusableView, View},
 };
@@ -57,5 +57,11 @@ impl FocusableView for Journal {
         } else {
             Ok(())
         }
+    }
+}
+
+impl FocusStatus for Journal {
+    fn is_focused(&self) -> bool {
+        self.focused
     }
 }

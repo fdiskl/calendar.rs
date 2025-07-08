@@ -11,10 +11,15 @@ use crate::ui::{
     common::{
         focusable::Focusable,
         layout::render_layout,
+        popup::MultiPopup,
         view::{FocusableView, View, ViewWithCursorControl},
     },
-    components::{input_popup::InputPopup, view_switcher::ViewSwitcher},
+    components::{
+        input_popup::InputPopup, layout::Layout, popup_host::PopupHost, view_switcher::ViewSwitcher,
+    },
+    daily::DailyView,
     journal::Journal,
+    monthly::MonthlyView,
 };
 
 enum AppState {
@@ -25,11 +30,7 @@ enum AppState {
 pub struct App<'a> {
     state: AppState,
 
-    main_view: ViewSwitcher<'a>,
-
-    journal: Journal,
-
-    ics_import_modal: InputPopup<'a>,
+    main: PopupHost<Layout<ViewSwitcher<'a>, Journal>>,
 }
 
 impl<'a> App<'a> {
@@ -37,14 +38,21 @@ impl<'a> App<'a> {
         daily_view: &'a mut dyn FocusableView,
         monthly_view: &'a mut dyn FocusableView,
     ) -> Self {
-        let mut s = Self {
+        let s = Self {
             state: AppState::Running,
-            journal: Journal::new(),
-            main_view: ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
-            ics_import_modal: InputPopup::new_input_popup("You .ics file", None, None),
+            main: PopupHost::new(Layout::new(
+                ViewSwitcher::new('v').with_views(vec![monthly_view, daily_view]),
+                Journal::new(),
+            ))
+            .with_popups(
+                vec![MultiPopup::C(Box::new(InputPopup::new_input_popup(
+                    "Your .ics file",
+                    None,
+                    None,
+                )))],
+                vec![KeyCode::Char('i')],
+            ),
         };
-
-        s.main_view.focus();
 
         s
     }
@@ -59,8 +67,7 @@ impl<'a> App<'a> {
     }
 
     fn update<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {
-        self.journal.update();
-        self.main_view.update();
+        self.main.update();
 
         term.draw(|frame| self.draw(frame))?;
 
@@ -74,58 +81,29 @@ impl<'a> App<'a> {
         match e {
             Event::Key(key_ev) if key_ev.kind == KeyEventKind::Press => match key_ev.code {
                 KeyCode::Char('q') => self.exit(),
-                KeyCode::Char(' ') => self.change_focus(),
-                KeyCode::Char('i') => self.ics_import_modal.focus(),
                 _ => {}
             },
 
             _ => {}
         }
 
-        self.ics_import_modal.handle_event_if_focused(&e)?;
-        self.journal.handle_event_if_focused(&e)?;
-        self.main_view.handle_event_if_focused(&e)
+        self.main.handle_event(&e)
     }
 
     fn exit(&mut self) {
         self.state = AppState::Exiting;
     }
 
-    fn change_focus(&mut self) {
-        self.main_view.toggle_focus();
-        self.journal.toggle_focus();
-    }
-
     fn draw(&self, frame: &mut Frame) {
-        let area = frame.area();
-
-        let modal_width = 50;
-        let modal_height = 8;
-
-        let x = area.x + (area.width.saturating_sub(modal_width)) / 2;
-        let y = area.y + (area.height.saturating_sub(modal_height)) / 2;
-
-        let modal_area = Rect::new(x, y, modal_width, modal_height);
-
-        frame.render_widget(self, frame.area());
-
         let mut cursor_pos = None;
 
-        let buffer = frame.buffer_mut();
-
-        self.ics_import_modal
-            .render_with_cursor(modal_area, buffer, &mut |x, y| {
-                cursor_pos = Some(Position::new(x, y));
+        self.main
+            .render_with_cursor(frame.area(), frame.buffer_mut(), &mut |x, y| {
+                cursor_pos = Some(Position::new(x, y))
             });
 
         if let Some(pos) = cursor_pos {
             frame.set_cursor_position(pos);
         }
-    }
-}
-
-impl<'a> Widget for &App<'a> {
-    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
-        render_layout(area, buf, &self.main_view, &self.journal);
     }
 }

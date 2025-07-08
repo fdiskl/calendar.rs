@@ -25,12 +25,16 @@ where
     V: FocusableView,
 {
     pub fn new(inner: V) -> Self {
-        Self {
+        let mut s = Self {
             active_popup: None,
             inner,
             popups: vec![],
             popups_triggers: vec![],
-        }
+        };
+
+        s.inner.focus();
+
+        s
     }
 
     pub fn with_popups(mut self, popups: Vec<MultiPopup>, popups_triggers: Vec<KeyCode>) -> Self {
