@@ -9,7 +9,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 
-use crate::ui::common::focusable::Focusable;
+use crate::ui::common::focusable::{FocusStatus, Focusable};
 use crate::ui::common::view::{
     FocusableView, FocusableViewWithCursorControl, Resettable, View, ViewWithCursorControl,
 };
@@ -146,5 +146,11 @@ impl Resettable for UserInput {
         self.cursor_position = 0;
 
         Ok(())
+    }
+}
+
+impl FocusStatus for UserInput {
+    fn is_focused(&self) -> bool {
+        self.focused
     }
 }

@@ -1,39 +1,60 @@
-use crate::ui::{
-    common::{
-        focusable::Focusable,
-        view::{
-            FocusableView, FocusableViewWithCursorControl, Resettable, View, ViewWithCursorControl,
+use ratatui::crossterm::event::{Event, KeyCode};
+
+use crate::{
+    state::AppState,
+    ui::{
+        common::{
+            focusable::{FocusStatus, Focusable},
+            view::{
+                FocusableView, FocusableViewWithCursorControl, Resettable, View,
+                ViewWithCursorControl,
+            },
         },
+        components::{input::UserInput, popup_with_cursor::Popup},
     },
-    components::popup_with_cursor::Popup,
 };
 
-pub struct IcsPopupContent {}
+pub struct IcsPopupContent {
+    state: AppState,
+    input: UserInput,
+}
 
 impl View for IcsPopupContent {
     fn handle_event(&mut self, e: &ratatui::crossterm::event::Event) -> anyhow::Result<()> {
-        todo!()
+        match e {
+            Event::Key(key_ev) => match key_ev.code {
+                KeyCode::Enter => {
+                    self.state.state.try_borrow_mut()?.tmp =
+                        Some(String::from(self.input.content()))
+                }
+
+                _ => {}
+            },
+            _ => {}
+        }
+
+        Ok(())
     }
 
     fn update(&mut self) {
-        todo!()
+        self.input.update();
     }
 
     fn render(&self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
-        todo!()
+        self.input.render(area, buf);
     }
 }
 impl Focusable for IcsPopupContent {
     fn focus(&mut self) {
-        todo!()
+        self.input.focus();
     }
 
     fn unfocus(&mut self) {
-        todo!()
+        self.input.unfocus();
     }
 
     fn toggle_focus(&mut self) {
-        todo!()
+        self.input.toggle_focus();
     }
 }
 impl FocusableView for IcsPopupContent {
@@ -41,7 +62,10 @@ impl FocusableView for IcsPopupContent {
         &mut self,
         e: &ratatui::crossterm::event::Event,
     ) -> anyhow::Result<()> {
-        todo!()
+        if self.input.is_focused() {
+            self.handle_event(e)?
+        }
+        self.input.handle_event_if_focused(e)
     }
 }
 impl ViewWithCursorControl for IcsPopupContent {
@@ -51,16 +75,24 @@ impl ViewWithCursorControl for IcsPopupContent {
         buf: &mut ratatui::prelude::Buffer,
         set_cursor: &mut dyn FnMut(u16, u16),
     ) {
-        todo!()
+        self.input.render_with_cursor(area, buf, set_cursor);
     }
 }
 impl FocusableViewWithCursorControl for IcsPopupContent {}
 impl Resettable for IcsPopupContent {
     fn reset(&mut self) -> anyhow::Result<()> {
-        todo!()
+        self.input.reset()
     }
 }
 
-pub fn new_ics_popup<'a>() -> Popup<'a, IcsPopupContent> {
-    Popup::new("Your .ics file", IcsPopupContent {}, None, None)
+pub fn new_ics_popup<'a>(state: AppState) -> Popup<'a, IcsPopupContent> {
+    Popup::new(
+        "Your .ics file",
+        IcsPopupContent {
+            state,
+            input: UserInput::new(""),
+        },
+        None,
+        None,
+    )
 }

@@ -7,20 +7,25 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::ui::{
-    common::view::{FocusableView, View, ViewWithCursorControl},
-    components::{
-        input_popup::InputPopup, layout::Layout, popup_host::PopupHost, view_switcher::ViewSwitcher,
+use crate::{
+    state::AppState,
+    ui::{
+        common::view::{FocusableView, View, ViewWithCursorControl},
+        components::{
+            ics_popup::new_ics_popup, input_popup::InputPopup, layout::Layout,
+            popup_host::PopupHost, tmp_popup::new_tmp_popup, view_switcher::ViewSwitcher,
+        },
+        journal::Journal,
     },
-    journal::Journal,
 };
 
-enum AppState {
+enum AppStatus {
     Running,
     Exiting,
 }
 
 pub struct App<'a> {
+    status: AppStatus,
     state: AppState,
 
     main: PopupHost<Layout<ViewSwitcher<'a>, Journal>>,
@@ -30,20 +35,21 @@ impl<'a> App<'a> {
     pub fn new(
         daily_view: &'a mut dyn FocusableView,
         monthly_view: &'a mut dyn FocusableView,
+        state: AppState,
     ) -> Self {
         let s = Self {
-            state: AppState::Running,
+            status: AppStatus::Running,
+            state: state.clone(),
             main: PopupHost::new(Layout::new(
                 ViewSwitcher::new('v').with_views(vec![daily_view, monthly_view]),
                 Journal::new(),
             ))
             .with_popups(
-                vec![Box::new(InputPopup::new_input_popup(
-                    "Your .ics file",
-                    None,
-                    None,
-                ))],
-                vec![KeyCode::Char('i')],
+                vec![
+                    Box::new(new_ics_popup(state.clone())),
+                    Box::new(new_tmp_popup(state.clone())),
+                ],
+                vec![KeyCode::Char('i'), KeyCode::Char('j')],
             ),
         };
 
@@ -52,9 +58,9 @@ impl<'a> App<'a> {
 
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> Result<()> {
         loop {
-            match self.state {
-                AppState::Running => self.update(term)?,
-                AppState::Exiting => return Ok(()),
+            match self.status {
+                AppStatus::Running => self.update(term)?,
+                AppStatus::Exiting => return Ok(()),
             }
         }
     }
@@ -84,7 +90,7 @@ impl<'a> App<'a> {
     }
 
     fn exit(&mut self) {
-        self.state = AppState::Exiting;
+        self.status = AppStatus::Exiting;
     }
 
     fn draw(&self, frame: &mut Frame) {
