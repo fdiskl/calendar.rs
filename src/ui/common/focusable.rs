@@ -4,3 +4,7 @@ pub trait Focusable {
 
     fn toggle_focus(&mut self);
 }
+
+pub trait FocusStatus {
+    fn is_focused(&self) -> bool;
+}

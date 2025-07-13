@@ -3,8 +3,8 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::views::common::{
-    focusable::Focusable,
+use crate::ui::common::{
+    focusable::{FocusStatus, Focusable},
     view::{FocusableView, View},
 };
 
@@ -51,7 +51,7 @@ impl<'a> ViewSwitcher<'a> {
     }
 }
 
-impl<'a> View for ViewSwitcher<'a> {
+impl View for ViewSwitcher<'_> {
     fn render(&self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
         self.curr_view().render(area, buf);
     }
@@ -75,7 +75,7 @@ impl<'a> View for ViewSwitcher<'a> {
     }
 }
 
-impl<'a> Focusable for ViewSwitcher<'a> {
+impl Focusable for ViewSwitcher<'_> {
     fn focus(&mut self) {
         self.focused = true;
         self.mut_curr_view().focus();
@@ -92,11 +92,17 @@ impl<'a> Focusable for ViewSwitcher<'a> {
     }
 }
 
-impl<'a> FocusableView for ViewSwitcher<'a> {
+impl FocusableView for ViewSwitcher<'_> {
     fn handle_event_if_focused(&mut self, e: &Event) -> Result<()> {
         if self.focused {
             self.handle_event(e)?
         }
         self.mut_curr_view().handle_event_if_focused(e)
+    }
+}
+
+impl FocusStatus for ViewSwitcher<'_> {
+    fn is_focused(&self) -> bool {
+        self.focused
     }
 }

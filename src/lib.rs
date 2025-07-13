@@ -1,4 +1,4 @@
 pub mod app;
-pub mod common;
-pub mod providers;
-pub mod views;
+pub mod calendar;
+pub mod state;
+pub mod ui;
